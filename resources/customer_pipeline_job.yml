@@ -12,7 +12,6 @@ resources:
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
-          job_cluster_key: demo_cluster
 
         # Task 2: run the real pipeline from the wheel.
         - task_key: run_pipeline
@@ -23,17 +22,10 @@ resources:
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
-          job_cluster_key: demo_cluster
           libraries:
             - whl: ../dist/*.whl
 
-      job_clusters:
-        - job_cluster_key: demo_cluster
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            node_type_id: Standard_DS3_v2
-            num_workers: 1
-            data_security_mode: SINGLE_USER
-
+      # No job_clusters block: tasks with no cluster spec run on serverless
+      # compute, which is what this workspace supports.
       queue:
         enabled: true
