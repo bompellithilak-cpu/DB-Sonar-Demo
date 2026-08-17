@@ -48,7 +48,7 @@ jobs:
         run: python -m pip install --upgrade build
 
       - name: Install Databricks CLI
-        run: curl -fsSL https://raw.githubusercontent.com/databricks/cli/main/install.sh | sh
+        uses: databricks/setup-cli@main
 
       - name: Deploy bundle (dev target)
         env:
@@ -77,7 +77,7 @@ jobs:
         run: python -m pip install --upgrade build
 
       - name: Install Databricks CLI
-        run: curl -fsSL https://raw.githubusercontent.com/databricks/cli/main/install.sh | sh
+        uses: databricks/setup-cli@main
 
       - name: Deploy bundle (prod target)
         env:
