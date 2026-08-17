@@ -22,10 +22,18 @@ resources:
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
-          libraries:
-            - whl: ../dist/*.whl
+          environment_key: pipeline_env
 
       # No job_clusters block: tasks with no cluster spec run on serverless
-      # compute, which is what this workspace supports.
+      # compute, which is what this workspace supports. Serverless tasks
+      # can't take a `libraries` block directly - the wheel is declared as
+      # a dependency of a named environment instead.
+      environments:
+        - environment_key: pipeline_env
+          spec:
+            client: "1"
+            dependencies:
+              - ../dist/*.whl
+
       queue:
         enabled: true
