@@ -1,0 +1,18 @@
+# ---------------------------------------------------------------------------
+# The caller. This is all a project team has to write.
+# ---------------------------------------------------------------------------
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/sonar-scan-reusable.yml
+    with:
+      python-version: "3.11"
+      fail-on-gate: true
+    secrets: inherit

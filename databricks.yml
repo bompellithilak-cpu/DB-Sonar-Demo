@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------------------
+# Databricks Asset Bundle.
+#
+# This is the piece that makes the demo real: the same repo that SonarQube
+# scans is the repo that deploys to Databricks. Sonar gates the merge;
+# the bundle does the deploy.
+#
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run customer_pipeline_job -t dev
+# ---------------------------------------------------------------------------
+bundle:
+  name: DB-Sonar-Demo
+
+include:
+  - resources/*.yml
+
+# The wheel built from src/ is uploaded and installed on the job cluster.
+artifacts:
+  customer_pipeline_wheel:
+    type: whl
+    build: python -m build --wheel
+    path: .
+
+variables:
+  catalog:
+    description: Unity Catalog catalog to write into
+    default: main
+  schema:
+    description: Schema to write into
+    default: demo
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      schema: demo_dev
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      schema: demo
+    permissions:
+      - level: CAN_VIEW
+        group_name: data-consumers

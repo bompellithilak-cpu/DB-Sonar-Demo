@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------------------
+# Reusable SonarQube workflow for Python / Databricks repos.
+# Other repos call this with `uses:` so every team scans the same way.
+# ---------------------------------------------------------------------------
+name: sonar-scan-python
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version used to run the tests
+        required: false
+        type: string
+        default: "3.11"
+      project-key:
+        description: Sonar project key (defaults to the one in sonar-project.properties)
+        required: false
+        type: string
+        default: ""
+      fail-on-gate:
+        description: Fail the build when the quality gate is red
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  sonar:
+    name: Test and scan
+    runs-on: ubuntu-latest
+
+    steps:
+      # Sonar needs the full history to work out which lines are "new code".
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 1: run the tests. This produces coverage.xml and junit.xml.
+      - name: Run unit tests with coverage
+        run: pytest
+
+      # Step 2: PySpark checks Sonar has no rules for (collect, inferSchema, /mnt/).
+      - name: PySpark anti-pattern checks
+        run: python scripts/pyspark_checks.py src notebooks > pyspark-issues.json
+
+      # Step 3: run the scanner. It reads the source AND all the reports above.
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            ${{ inputs.project-key != '' && format('-Dsonar.projectKey={0}', inputs.project-key) || '' }}
+
+      # Step 4: block the merge if the quality gate is red.
+      - name: Quality gate
+        if: ${{ inputs.fail-on-gate }}
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Publish reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and-coverage-reports
+          path: |
+            coverage.xml
+            junit.xml
+          if-no-files-found: warn

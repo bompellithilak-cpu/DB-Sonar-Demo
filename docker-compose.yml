@@ -1,0 +1,19 @@
+# Optional: a local SonarQube so you can SEE the dashboard during the demo.
+#   docker compose up -d      then open http://localhost:9000  (admin / admin)
+services:
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube-demo
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:

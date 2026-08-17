@@ -1,0 +1,39 @@
+resources:
+  jobs:
+    customer_pipeline_job:
+      name: "[${bundle.target}] Customer pipeline (Sonar demo)"
+
+      tasks:
+        # Task 1: build the bronze table with deliberately dirty rows so the
+        # DQ rules have something to catch.
+        - task_key: seed_sample_data
+          notebook_task:
+            notebook_path: ../notebooks/00_setup_sample_data.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          job_cluster_key: demo_cluster
+
+        # Task 2: run the real pipeline from the wheel.
+        - task_key: run_pipeline
+          depends_on:
+            - task_key: seed_sample_data
+          notebook_task:
+            notebook_path: ../notebooks/run_customer_pipeline.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          job_cluster_key: demo_cluster
+          libraries:
+            - whl: ../dist/*.whl
+
+      job_clusters:
+        - job_cluster_key: demo_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_DS3_v2
+            num_workers: 1
+            data_security_mode: SINGLE_USER
+
+      queue:
+        enabled: true
