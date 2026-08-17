@@ -40,6 +40,7 @@ class SparkVisitor(ast.NodeVisitor):
         severity, message = RULES[rule_id]
         self.issues.append(
             {
+                "engineId": "pyspark-checks",
                 "ruleId": rule_id,
                 "effortMinutes": 15,
                 "severity": severity,
