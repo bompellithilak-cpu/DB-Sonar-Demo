@@ -193,6 +193,27 @@ CI. The Spark adapter just applies them at scale. That is why the quality
 gate is worth having — it is guarding logic that genuinely decides which
 customer records reach the business.
 
+### Promotion: non-production → production
+
+The manual commands above are for exploring locally. In CI, promotion is
+automatic and gated, wired through `.github/workflows/cd.yml`:
+
+| Bundle target | GitHub Environment | Trigger | Approval |
+|---|---|---|---|
+| `dev` | `non-production` | push to `main`, after the CI quality gate passes | none — auto-deploys |
+| `prod` | `production` | after `dev` deploys successfully | **required** — a listed reviewer must approve the run, and only from `main` |
+
+Both environments are configured under **Settings → Environments** in
+GitHub, not in code — that's what makes the approval gate real rather than
+a convention. `non-production` and `prod` also stay isolated at the data
+layer: separate Unity Catalog schemas (`demo_dev` vs `demo`) and separate
+workspace paths, set per-target in `databricks.yml`, so a bad non-production
+run can never touch production tables even if someone skipped the gate.
+
+Nothing here bypasses the SonarQube gate from Part 1 — `cd.yml` only starts
+after `ci.yml` reports success, so code that failed the quality gate never
+reaches either Databricks environment, non-production or production.
+
 ---
 
 ## Limits you should say out loud

@@ -8,6 +8,22 @@
 #   databricks bundle validate -t dev
 #   databricks bundle deploy   -t dev
 #   databricks bundle run customer_pipeline_job -t dev
+#
+# Two environments, two bundle targets, two GitHub Environments:
+#
+#   Bundle target | Purpose         | GitHub Environment | Approval required
+#   --------------|-----------------|---------------------|-------------------
+#   dev           | non-production  | non-production      | no (auto-deploy)
+#   prod          | production      | production          | yes (required
+#                 |                 |                      | reviewer, main
+#                 |                 |                      | branch only)
+#
+# .github/workflows/cd.yml deploys "dev" and then "prod" after the "CI"
+# workflow's SonarQube quality gate passes on a push to main. Code never
+# reaches either target unless the gate already passed. Non-production and
+# production stay isolated at the data layer too, not just by job name:
+# see the `schema` variable per target below (demo_dev vs demo) and the
+# separate workspace root_path per target.
 # ---------------------------------------------------------------------------
 bundle:
   name: DB-Sonar-Demo
