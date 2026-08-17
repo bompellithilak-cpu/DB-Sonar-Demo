@@ -35,7 +35,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-0000000000000000.0.azuredatabricks.net
+      host: https://dbc-e56bb002-7c03.cloud.databricks.com
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
     variables:
       schema: demo_dev
@@ -43,7 +43,7 @@ targets:
   prod:
     mode: production
     workspace:
-      host: https://adb-0000000000000000.0.azuredatabricks.net
+      host: https://dbc-e56bb002-7c03.cloud.databricks.com
       root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
     variables:
       schema: demo
